@@ -1,0 +1,15 @@
+item,value
+quotes read,22678.0
+quotes with a cleaning fee,0.0
+quotes with a service fee,0.0
+quotes with taxes,58.0
+quotes in US dollars,21540.0
+quotes with a discount,9118.0
+monthly-stay quotes with a discount,8741.0
+short-stay quotes with a discount,377.0
+quotes with both a total and a price after discount,20966.0
+of which the two are within a dollar,20966.0
+monthly-stay quotes with a discount and a price after it,8716.0
+their discount as a share of the price before it: median,0.17624603600830285
+their discount as a share of the price before it: first quartile,0.09038846113418691
+their discount as a share of the price before it: third quartile,0.20508613617719443

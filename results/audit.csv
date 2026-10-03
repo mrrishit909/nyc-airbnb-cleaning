@@ -4,6 +4,8 @@ rows: summary listings,30555.0
 rows: neighbourhood list,230.0
 rows: neighbourhood outlines,233.0
 rows: reviews,990170.0
+columns: detailed listings,90.0
+columns: summary listings,19.0
 duplicate ids: detailed,0.0
 duplicate ids: summary,0.0
 ids in both listings tables,30259.0

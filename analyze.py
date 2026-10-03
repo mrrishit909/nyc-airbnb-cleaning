@@ -1,7 +1,7 @@
 """Steps 2-4: audit and clean the five tables, combine them, and ask what a night in New York costs.
 
     ./venv/bin/python analyze.py
-        -> results/audit.csv  agreement.csv  quote.csv  reviews_by_year.csv  stay.csv  price.csv  price_coverage.csv  registration.csv  summary.csv
+        -> results/audit.csv  agreement.csv  split_neighbourhoods.csv  quote.csv  quote_contents.csv  reviews_by_year.csv  stay.csv  price.csv  price_coverage.csv  registration.csv  summary.csv
 
 Tables: the detailed listings (30,259, with the price as text like "$1,250.00"), the summary listings (30,555, price in whole dollars), the neighbourhood list and outlines, and the reviews (one row per review).
 Cleaning: prices are text and are turned into numbers; registration numbers are trimmed and put in upper case; dates are parsed. The summary table holds every listing in the detailed one, so it is the full list: one row per listing,
@@ -48,7 +48,7 @@ def main():
         audit.append((name, value))
 
     # Step 2: audit and clean
-    add("rows: detailed listings", len(L)); add("rows: summary listings", len(S)); add("rows: neighbourhood list", len(N)); add("rows: neighbourhood outlines", len(G["features"])); add("rows: reviews", len(V))
+    add("rows: detailed listings", len(L)); add("rows: summary listings", len(S)); add("rows: neighbourhood list", len(N)); add("rows: neighbourhood outlines", len(G["features"])); add("rows: reviews", len(V)); add("columns: detailed listings", L.shape[1]); add("columns: summary listings", S.shape[1])
     add("duplicate ids: detailed", int(L["id"].duplicated().sum())); add("duplicate ids: summary", int(S["id"].duplicated().sum()))
     a, b = set(L["id"]), set(S["id"]); only_s = S[~S["id"].isin(a)]
     add("ids in both listings tables", len(a & b)); add("ids only in the detailed table", len(a - b)); add("ids only in the summary table", len(b - a))
@@ -94,6 +94,7 @@ def main():
         polys.setdefault(k, []).extend(parts); nfeat[k] = nfeat.get(k, 0) + 1
     names = set(map(tuple, N[["neighbourhood_group", "neighbourhood"]].values))
     add("neighbourhoods: names in the list", len(names)); add("neighbourhoods: names in the outlines", len(polys)); add("neighbourhoods: in the list but not the outlines", len(names - set(polys))); add("neighbourhoods: in the outlines but not the list", len(set(polys) - names))
+    pd.DataFrame([{"neighbourhood_group": k[0], "neighbourhood": k[1], "outlines": v} for k, v in sorted(nfeat.items()) if v > 1]).to_csv(R / "split_neighbourhoods.csv", index=False)
     add("neighbourhoods drawn as two separate outlines", sum(v == 2 for v in nfeat.values())); add("neighbourhoods with no listing", len(names - set(map(tuple, S[["neighbourhood_group", "neighbourhood"]].values))))
     pts = np.c_[S["longitude"], S["latitude"]]; ok = np.zeros(len(S), bool)
     for k, parts in polys.items():
@@ -109,6 +110,14 @@ def main():
     qrows = [{"stay": s, "quotes": len(t), "priced": int(t["price_quote_price_per_night"].notna().sum()), "nights_min": int(t["nights"].min()), "nights_median": float(t["nights"].median()), "nights_max": int(t["nights"].max()),
               "quote_equals_minimum_stay": int((t["nights"] == t["minimum_nights"]).sum()), "lead_days_median": float(t["lead"].median()), "lead_days_max": int(t["lead"].max())} for s, t in q.groupby("stay")]
     pd.DataFrame(qrows).to_csv(R / "quote.csv", index=False)
+    qj = q["price_quote_raw"].map(lambda s: json.loads(s)["quote"])                  # the quote is a JSON document inside the CSV
+    disc = qj.map(lambda j: float(j["discount_amount"]) if j.get("discount_amount") is not None else np.nan); sub = qj.map(lambda j: float(j["discounted_subtotal"]) if j.get("discounted_subtotal") is not None else np.nan)
+    tot = qj.map(lambda j: float(j["total_price"]) if j.get("total_price") is not None else np.nan); monthly = (q["stay"] == LONG); has = disc.notna(); both = disc.notna() & sub.notna(); share = (disc / (sub + disc))[monthly & both]
+    qc = [("quotes read", len(q)), ("quotes with a cleaning fee", sum(j.get("cleaning_fee") is not None for j in qj)), ("quotes with a service fee", sum(j.get("service_fee") is not None for j in qj)), ("quotes with taxes", sum(j.get("taxes") is not None for j in qj)),
+          ("quotes in US dollars", sum(j.get("currency") == "USD" for j in qj)), ("quotes with a discount", int(has.sum())), ("monthly-stay quotes with a discount", int((has & monthly).sum())), ("short-stay quotes with a discount", int((has & ~monthly).sum())),
+          ("quotes with both a total and a price after discount", int((tot.notna() & sub.notna()).sum())), ("of which the two are within a dollar", int(((tot - sub).abs() <= 1).sum())), ("monthly-stay quotes with a discount and a price after it", len(share)),
+          ("their discount as a share of the price before it: median", float(share.median())), ("their discount as a share of the price before it: first quartile", float(share.quantile(0.25))), ("their discount as a share of the price before it: third quartile", float(share.quantile(0.75)))]
+    pd.DataFrame(qc, columns=["item", "value"]).to_csv(R / "quote_contents.csv", index=False)
     add("detailed listings with a price quote", len(q)); add("quoted price per night equals the price (where both)", int((np.isclose(pd.to_numeric(q["price_quote_price_per_night"].astype(str).str.replace(r"[$,]", "", regex=True), errors="coerce").round(2), q["price_clean"], rtol=0, atol=0.011) | q["price_quote_price_per_night"].isna() | q["price_clean"].isna()).sum()))
 
     # Step 4: explore, on the full list (summary table): stay length, price, registration
@@ -135,7 +144,7 @@ def main():
           "priced_over_5000": int((pr > 5000).sum()), "priced_over_1000": int((pr > 1000).sum()), "price_p99": float(np.quantile(pr, 0.99))}
     pd.DataFrame(list(sm.items()), columns=["key", "value"]).to_csv(R / "summary.csv", index=False)
     pd.DataFrame(audit, columns=["check", "value"]).to_csv(R / "audit.csv", index=False)
-    for f in ("audit", "agreement", "quote", "stay", "price", "price_coverage", "registration", "summary"):
+    for f in ("audit", "agreement", "split_neighbourhoods", "quote", "quote_contents", "stay", "price", "price_coverage", "registration", "summary"):
         print("==", f); print(pd.read_csv(R / f"{f}.csv").round(3).to_string(index=False))
 
 

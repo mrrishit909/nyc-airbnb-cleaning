@@ -85,7 +85,7 @@ def main():
         same(name, got, aud[name])
 
     # audit: rows, ids, the 296 listings only in the summary table
-    A("rows: detailed listings", len(L)); A("rows: summary listings", len(S)); A("rows: neighbourhood list", len(N)); A("rows: neighbourhood outlines", len(G["features"])); A("rows: reviews", len(V))
+    A("rows: detailed listings", len(L)); A("rows: summary listings", len(S)); A("rows: neighbourhood list", len(N)); A("rows: neighbourhood outlines", len(G["features"])); A("rows: reviews", len(V)); A("columns: detailed listings", len(L[0])); A("columns: summary listings", len(S[0]))
     ids_l, ids_s = [r["id"] for r in L], [r["id"] for r in S]; a, b = set(ids_l), set(ids_s)
     A("duplicate ids: detailed", len(ids_l) - len(a)); A("duplicate ids: summary", len(ids_s) - len(b)); A("ids in both listings tables", len(a & b)); A("ids only in the detailed table", len(a - b)); A("ids only in the summary table", len(b - a))
     only = [r for r in S if r["id"] not in a]; review_ids = {r["listing_id"] for r in V}
@@ -154,6 +154,7 @@ def main():
         parts.setdefault(k, []).extend(ps); nfeat[k] += 1
     names = {(r["neighbourhood_group"], r["neighbourhood"]) for r in N}; used = {(r["neighbourhood_group"], r["neighbourhood"]) for r in S}
     A("neighbourhoods: names in the list", len(names)); A("neighbourhoods: names in the outlines", len(parts)); A("neighbourhoods: in the list but not the outlines", len(names - set(parts))); A("neighbourhoods: in the outlines but not the list", len(set(parts) - names))
+    eq("split neighbourhoods", sorted((r["neighbourhood_group"], r["neighbourhood"], int(r["outlines"])) for r in table("split_neighbourhoods")), sorted((k[0], k[1], v) for k, v in nfeat.items() if v > 1))
     A("neighbourhoods drawn as two separate outlines", sum(v == 2 for v in nfeat.values())); A("neighbourhoods with no listing", len(names - used))
     box = {k: [(min(x for ring in p for x, _ in ring), max(x for ring in p for x, _ in ring), min(y for ring in p for _, y in ring), max(y for ring in p for _, y in ring)) for p in ps] for k, ps in parts.items()}
     ok = 0
@@ -173,6 +174,18 @@ def main():
         same("quotes", len(t), r["quotes"]); same("quotes priced", sum(x[3] for x in t), r["priced"]); same("quote nights min", min(nl), r["nights_min"]); same("quote nights median", quantile(nl, 0.5), r["nights_median"]); same("quote nights max", max(nl), r["nights_max"])
         same("quote equals minimum stay", sum(x[2] for x in t), r["quote_equals_minimum_stay"]); same("quote lead median", quantile(ld, 0.5), r["lead_days_median"]); same("quote lead max", max(ld), r["lead_days_max"])
     A("detailed listings with a price quote", len(q))
+    qj = [(json.loads(r["price_quote_raw"])["quote"], SHORT if (num(r["minimum_nights"]) is not None and num(r["minimum_nights"]) < 30) else LONG) for r in q]; qc = {r["item"]: float(r["value"]) for r in table("quote_contents")}
+    def fl(j, k):
+        return float(j[k]) if j.get(k) is not None else None
+    def QC(name, got):
+        same("quote contents: " + name, got, qc[name])
+    QC("quotes read", len(qj)); QC("quotes with a cleaning fee", sum(j.get("cleaning_fee") is not None for j, _ in qj)); QC("quotes with a service fee", sum(j.get("service_fee") is not None for j, _ in qj)); QC("quotes with taxes", sum(j.get("taxes") is not None for j, _ in qj))
+    QC("quotes in US dollars", sum(j.get("currency") == "USD" for j, _ in qj)); QC("quotes with a discount", sum(fl(j, "discount_amount") is not None for j, _ in qj))
+    QC("monthly-stay quotes with a discount", sum(fl(j, "discount_amount") is not None and s == LONG for j, s in qj)); QC("short-stay quotes with a discount", sum(fl(j, "discount_amount") is not None and s == SHORT for j, s in qj))
+    pairs2 = [(fl(j, "total_price"), fl(j, "discounted_subtotal")) for j, _ in qj if fl(j, "total_price") is not None and fl(j, "discounted_subtotal") is not None]
+    QC("quotes with both a total and a price after discount", len(pairs2)); QC("of which the two are within a dollar", sum(abs(t - s_) <= 1 for t, s_ in pairs2))
+    sh = [fl(j, "discount_amount") / (fl(j, "discounted_subtotal") + fl(j, "discount_amount")) for j, s in qj if s == LONG and fl(j, "discount_amount") is not None and fl(j, "discounted_subtotal") is not None]
+    QC("monthly-stay quotes with a discount and a price after it", len(sh)); QC("their discount as a share of the price before it: median", quantile(sh, 0.5)); QC("their discount as a share of the price before it: first quartile", quantile(sh, 0.25)); QC("their discount as a share of the price before it: third quartile", quantile(sh, 0.75))
     tol = 0
     for r in q:
         pq, p = r["price_quote_price_per_night"], r["price"]
