@@ -1,9 +1,9 @@
-"""Step 1: the Inside Airbnb New York City files of 14 June 2026: five files in four formats.
+"""Step 1: the Inside Airbnb New York City files of 14 June 2026: five files in three formats.
 
     ./venv/bin/python download.py   -> data/ (5 files), results/pull.json
 
 Inside Airbnb (insideairbnb.com/get-the-data), "New York City, 14 June 2026", licensed under Creative Commons Attribution 4.0. Public listing information collected from airbnb.com. The files are:
-listings.csv.gz (the detailed listings, gzipped CSV), summary_listings.csv (the short listings table, plain CSV), neighbourhoods.csv, neighbourhoods.geojson (the neighbourhood outlines, JSON)
+listings.csv.gz (the detailed listings, gzipped CSV), summary_listings.csv (the short listings table, plain CSV), neighbourhoods.csv, neighbourhoods.geojson (the neighbourhood outlines, GeoJSON)
 and reviews.csv (listing id and date of every review, plain CSV). About 45 MB, so none of it is committed; this script fetches it. Host names, listing titles and descriptions are in the files
 and are never used or published here: the results are counts and summaries.
 """
