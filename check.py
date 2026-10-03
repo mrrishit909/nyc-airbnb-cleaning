@@ -183,6 +183,8 @@ def main():
     QC("quotes in US dollars", sum(j.get("currency") == "USD" for j, _ in qj)); QC("quotes with a discount", sum(fl(j, "discount_amount") is not None for j, _ in qj))
     QC("monthly-stay quotes with a discount", sum(fl(j, "discount_amount") is not None and s == LONG for j, s in qj)); QC("short-stay quotes with a discount", sum(fl(j, "discount_amount") is not None and s == SHORT for j, s in qj))
     pairs2 = [(fl(j, "total_price"), fl(j, "discounted_subtotal")) for j, _ in qj if fl(j, "total_price") is not None and fl(j, "discounted_subtotal") is not None]
+    pn = [(fl(j, "total_price"), num(r["price_quote_price_per_night"]), (date.fromisoformat(r["price_quote_checkout_date"]) - date.fromisoformat(r["price_quote_checkin_date"])).days) for (j, _), r in zip(qj, q)]; pn = [x for x in pn if x[0] is not None and x[1] is not None]
+    QC("quotes with a total and a price per night", len(pn)); QC("of which the total divided by the nights equals the price per night to the cent", sum(abs(t / nn - p) <= 0.006 for t, p, nn in pn))
     QC("quotes with both a total and a price after discount", len(pairs2)); QC("of which the two are within a dollar", sum(abs(t - s_) <= 1 for t, s_ in pairs2))
     sh = [fl(j, "discount_amount") / (fl(j, "discounted_subtotal") + fl(j, "discount_amount")) for j, s in qj if s == LONG and fl(j, "discount_amount") is not None and fl(j, "discounted_subtotal") is not None]
     QC("monthly-stay quotes with a discount and a price after it", len(sh)); QC("their discount as a share of the price before it: median", quantile(sh, 0.5)); QC("their discount as a share of the price before it: first quartile", quantile(sh, 0.25)); QC("their discount as a share of the price before it: third quartile", quantile(sh, 0.75))

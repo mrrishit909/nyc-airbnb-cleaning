@@ -7,6 +7,8 @@ quotes in US dollars,21540.0
 quotes with a discount,9118.0
 monthly-stay quotes with a discount,8741.0
 short-stay quotes with a discount,377.0
+quotes with a total and a price per night,21514.0
+of which the total divided by the nights equals the price per night to the cent,21514.0
 quotes with both a total and a price after discount,20966.0
 of which the two are within a dollar,20966.0
 monthly-stay quotes with a discount and a price after it,8716.0
