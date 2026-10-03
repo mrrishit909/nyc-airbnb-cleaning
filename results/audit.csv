@@ -1,0 +1,60 @@
+check,value
+rows: detailed listings,30259.0
+rows: summary listings,30555.0
+rows: neighbourhood list,230.0
+rows: neighbourhood outlines,233.0
+rows: reviews,990170.0
+duplicate ids: detailed,0.0
+duplicate ids: summary,0.0
+ids in both listings tables,30259.0
+ids only in the detailed table,0.0
+ids only in the summary table,296.0
+summary only: private rooms,296.0
+summary only: with a price,282.0
+summary only: minimum stay under 30 nights,296.0
+summary only: with a registration field,0.0
+summary only: in Manhattan,246.0
+summary only: with reviews,239.0
+scrape dates in the detailed table,4.0
+first scrape date,20260614.0
+last scrape date,20260623.0
+detailed prices written as text,21515.0
+"detailed prices not in the form $1,234.56",0.0
+detailed prices blank,8744.0
+detailed prices that fail to convert,0.0
+priced in both tables,21515.0
+priced in one table only,0.0
+summary price equals the detailed price rounded half up to the dollar,21515.0
+largest difference between the two prices (dollars),0.5
+registration field: filled in (detailed),5286.0
+registration field: Exempt,2956.0
+registration field: numbers,2330.0
+registration numbers not in upper case or with spaces,23.0
+registration numbers not in the form OSE-STRREG-0000000,0.0
+distinct registration numbers,2013.0
+registration numbers on more than one listing,255.0
+listings sharing a registration number,572.0
+most listings on one registration number,6.0
+minimum stay blank (summary),2.0
+longest minimum stay (nights),1124.0
+last_review dates that fail to parse,0.0
+reviews: earliest date,20090525.0
+reviews: latest date,20260622.0
+reviews: listings reviewed,21939.0
+reviews: reviewed listings missing from the summary table,0.0
+reviews: reviewed listings missing from the detailed table,239.0
+listings whose number_of_reviews equals their review rows,30555.0
+listings whose last_review equals their latest review (or both blank),30555.0
+detailed listings whose first_review equals their earliest review (or both blank),30259.0
+listings with no review,8616.0
+neighbourhoods: names in the list,230.0
+neighbourhoods: names in the outlines,230.0
+neighbourhoods: in the list but not the outlines,0.0
+neighbourhoods: in the outlines but not the list,0.0
+neighbourhoods drawn as two separate outlines,3.0
+neighbourhoods with no listing,7.0
+listings inside the outline of their own neighbourhood,30555.0
+listings outside it,0.0
+listings whose neighbourhood is not in the list,0.0
+detailed listings with a price quote,22678.0
+quoted price per night equals the price (where both),22678.0

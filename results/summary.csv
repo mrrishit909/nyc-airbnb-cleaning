@@ -1,0 +1,15 @@
+key,value
+listings,30555.0
+short_stay,5836.0
+monthly_stay,24717.0
+stay_unknown,2.0
+exactly_30,23802.0
+private_rooms,13009.0
+entire_homes,16808.0
+priced,21797.0
+price_mean,278.3259622883883
+price_median,176.0
+price_max,30973.0
+priced_over_5000,38.0
+priced_over_1000,622.0
+price_p99,1702.2400000000052
